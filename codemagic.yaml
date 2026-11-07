@@ -1,0 +1,66 @@
+workflows:
+  coey-ios-64:
+    name: Coey Ai iOS — build 64
+    max_build_duration: 180
+    instance_type: mac_mini_m2
+
+    environment:
+      xcode: latest
+      vars:
+        XCODE_PROJECT: CoeyAi.xcodeproj
+        XCODE_SCHEME: CoeyAi
+        BUNDLE_ID: ai.coey.app
+
+      # Codemagic needs an App Store Connect API key stored as an
+      # integration named "CoeyASC" (Team settings → Integrations).
+      # The distribution certificate + provisioning profile are fetched
+      # automatically from that integration.
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: ai.coey.app
+
+    integrations:
+      app_store_connect: CoeyASC
+
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: main
+          include: true
+
+    scripts:
+      - name: Install build tools
+        script: |
+          brew install xcodegen cmake
+
+      - name: Build llama.xcframework
+        script: |
+          ./scripts/build_llama.sh
+
+      - name: Generate Xcode project
+        script: |
+          xcodegen generate
+
+      - name: Confirm build number
+        script: |
+          grep -q 'CURRENT_PROJECT_VERSION: "64"' project.yml
+          echo "building CFBundleVersion 64"
+
+      - name: Build signed IPA
+        script: |
+          xcode-project build-ipa \
+            --project "$XCODE_PROJECT" \
+            --scheme "$XCODE_SCHEME"
+
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+
+    publishing:
+      app_store_connect:
+        auth: integration
+        # Build 64 goes to TestFlight, not straight to review.
+        submit_to_testflight: true
+        beta_groups:
+          - Internal

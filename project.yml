@@ -1,0 +1,51 @@
+name: CoeyAi
+options:
+  bundleIdPrefix: ai.coey
+  deploymentTarget:
+    iOS: "16.4"
+  createIntermediateGroups: true
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    MARKETING_VERSION: "1.0"
+    CURRENT_PROJECT_VERSION: "64"
+    ENABLE_USER_SCRIPT_SANDBOXING: NO
+    CLANG_CXX_LANGUAGE_STANDARD: "c++17"
+targets:
+  CoeyAi:
+    type: application
+    platform: iOS
+    deploymentTarget: "16.4"
+    sources:
+      - path: CoeyAi
+        excludes:
+          - "Info.plist"
+          - "Resources"
+      - path: CoeyAi/Resources
+        type: folder
+        buildPhase: resources
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: ai.coey.app
+        PRODUCT_NAME: CoeyAi
+        INFOPLIST_FILE: CoeyAi/Info.plist
+        GENERATE_INFOPLIST_FILE: NO
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        TARGETED_DEVICE_FAMILY: "1"
+        CODE_SIGN_STYLE: Automatic
+        SUPPORTS_MACCATALYST: NO
+        IPHONEOS_DEPLOYMENT_TARGET: "16.4"
+        OTHER_LDFLAGS: "$(inherited) -lc++"
+    dependencies:
+      - framework: Frameworks/llama.xcframework
+        embed: true
+        codeSign: true
+schemes:
+  CoeyAi:
+    build:
+      targets:
+        CoeyAi: all
+    run:
+      config: Debug
+    archive:
+      config: Release
